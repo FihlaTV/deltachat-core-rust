@@ -1640,7 +1640,12 @@ pub unsafe extern "C" fn dc_get_blocked_cnt(context: *mut dc_context_t) -> libc:
     }
     let ctx = &*context;
 
-    block_on(async move { Contact::get_all_blocked(&ctx).await.len() as libc::c_int })
+    block_on(async move {
+        Contact::get_all_blocked(&ctx)
+            .await
+            .unwrap_or_default()
+            .len() as libc::c_int
+    })
 }
 
 #[no_mangle]
@@ -1655,7 +1660,7 @@ pub unsafe extern "C" fn dc_get_blocked_contacts(
 
     block_on(async move {
         Box::into_raw(Box::new(dc_array_t::from(
-            Contact::get_all_blocked(&ctx).await,
+            Contact::get_all_blocked(&ctx).await.unwrap_or_default(),
         )))
     })
 }

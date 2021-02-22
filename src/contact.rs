@@ -83,6 +83,9 @@ pub struct Contact {
 pub enum Origin {
     Unknown = 0,
 
+    /// The contact is a mailing list address, needed to unblock mailing lists
+    MailinglistAddress = 0x2,
+
     /// Hidden on purpose, e.g. addresses with the word "noreply" in it
     Hidden = 0x8,
 
@@ -675,8 +678,8 @@ impl Contact {
     }
 
     /// Get blocked contacts.
-    pub async fn get_all_blocked(context: &Context) -> Vec<u32> {
-        context
+    pub async fn get_all_blocked(context: &Context) -> Result<Vec<u32>> {
+        let ret = context
             .sql
             .query_map(
                 "SELECT id FROM contacts WHERE id>? AND blocked!=0 ORDER BY LOWER(iif(name='',authname,name)||addr),id;",
@@ -687,8 +690,8 @@ impl Contact {
                         .map_err(Into::into)
                 },
             )
-            .await
-            .unwrap_or_default()
+            .await?;
+        Ok(ret)
     }
 
     /// Returns a textual summary of the encryption state for the contact.
